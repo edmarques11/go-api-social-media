@@ -1,2 +1,5 @@
 # Compilled file
 api
+
+# Env files
+.env

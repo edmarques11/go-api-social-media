@@ -1,10 +1,40 @@
 package controllers
 
-import "net/http"
+import (
+	"api/src/database"
+	"api/src/models"
+	"api/src/repositories"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+)
 
 // CreateUser create an user
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Criando usuário!"))
+	bodyRequest, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var user models.User
+	if err = json.Unmarshal(bodyRequest, &user); err != nil {
+		log.Fatal(err)
+	}
+
+	db, err := database.MakeConnection()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	repository := repositories.NewUserRepository(db)
+	userId, err := repository.Create(user)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	w.Write([]byte(fmt.Sprintf("Usuário inserido: %d", userId)))
 }
 
 // GetUsers get all users
