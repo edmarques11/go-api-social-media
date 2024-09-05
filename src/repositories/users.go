@@ -104,6 +104,7 @@ func (userRepository users) GetById(userId int64) (models.User, error) {
 	return user, nil
 }
 
+// UpdateUser update an user
 func (userRepository users) UpdateUser(userId int64, user models.User) error {
 	statment, err := userRepository.db.Prepare(
 		"update tb_user set name = ?, nick = ?, email = ? where id = ?",
@@ -114,6 +115,23 @@ func (userRepository users) UpdateUser(userId int64, user models.User) error {
 	defer statment.Close()
 
 	if _, err = statment.Exec(user.Name, user.Nick, user.Email, userId); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteUser delete an user
+func (userRepository users) DeleteUser(userId int64) error {
+	statment, err := userRepository.db.Prepare(
+		"delete from tb_user where id = ?",
+	)
+	if err != nil {
+		return err
+	}
+	defer statment.Close()
+
+	if _, err = statment.Exec(userId); err != nil {
 		return err
 	}
 
