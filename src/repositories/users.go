@@ -54,7 +54,6 @@ func (userRepository users) GetUsers(nameOrNIck string) ([]models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
 
 	var users []models.User
@@ -87,6 +86,7 @@ func (userRepository users) GetById(userId int64) (models.User, error) {
 	if err != nil {
 		return models.User{}, err
 	}
+	defer rows.Close()
 
 	var user models.User
 	if rows.Next() {
@@ -96,6 +96,30 @@ func (userRepository users) GetById(userId int64) (models.User, error) {
 			&user.Email,
 			&user.Nick,
 			&user.CreatedAt,
+		); err != nil {
+			return models.User{}, err
+		}
+	}
+
+	return user, nil
+}
+
+// GetByEmail search an user by email
+func (userRepository users) GetByEmail(userEmail string) (models.User, error) {
+	rows, err := userRepository.db.Query(
+		"select id, password from tb_user where email = ?",
+		userEmail,
+	)
+	if err != nil {
+		return models.User{}, err
+	}
+	defer rows.Close()
+
+	var user models.User
+	if rows.Next() {
+		if err = rows.Scan(
+			&user.ID,
+			&user.Password,
 		); err != nil {
 			return models.User{}, err
 		}
