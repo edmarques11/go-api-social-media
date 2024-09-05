@@ -4,6 +4,8 @@ import (
 	"errors"
 	"strings"
 	"time"
+
+	"github.com/badoux/checkmail"
 )
 
 const (
@@ -35,13 +37,17 @@ func (user *User) validator(step string) error {
 
 	switch {
 	case user.Name == "":
-		msg = "o campo 'name' é obrigatório e não pode estar em branco"
+		msg = "O campo 'name' é obrigatório e não pode estar em branco"
 	case user.Email == "":
-		msg = "o campo 'email' é obrigatório e não pode estar em branco"
+		msg = "O campo 'email' é obrigatório e não pode estar em branco"
 	case user.Nick == "":
-		msg = "o campo 'nick' é obrigatório e não pode estar em branco"
+		msg = "O campo 'nick' é obrigatório e não pode estar em branco"
 	case step == SaveUser && user.Password == "":
-		msg = "o campo 'password' é obrigatório e não pode estar em branco"
+		msg = "O campo 'password' é obrigatório e não pode estar em branco"
+	}
+
+	if err := checkmail.ValidateFormat(user.Email); err != nil {
+		msg = "O email inserido é inválido"
 	}
 
 	if msg != "" {
