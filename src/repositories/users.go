@@ -3,6 +3,7 @@ package repositories
 import (
 	"api/src/models"
 	"database/sql"
+	"fmt"
 )
 
 type users struct {
@@ -40,4 +41,81 @@ func (userRepository users) Create(userModel models.User) (uint64, error) {
 	}
 
 	return uint64(userId), nil
+}
+
+// GetUsers search users by name or nick
+func (userRepository users) GetUsers(nameOrNIck string) ([]models.User, error) {
+	nameOrNIck = fmt.Sprintf("%%%s%%", nameOrNIck)
+	rows, err := userRepository.db.Query(
+		"select id, name, email, nick, created_at from tb_user where name like ? or nick like ?",
+		nameOrNIck,
+		nameOrNIck,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var users []models.User
+
+	for rows.Next() {
+		var user models.User
+
+		if err = rows.Scan(
+			&user.ID,
+			&user.Name,
+			&user.Email,
+			&user.Nick,
+			&user.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+// GetById search an user by id
+func (userRepository users) GetById(userId int64) (models.User, error) {
+	rows, err := userRepository.db.Query(
+		"select id, name, email, nick, created_at from tb_user where id = ?",
+		userId,
+	)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	var user models.User
+	if rows.Next() {
+		if err = rows.Scan(
+			&user.ID,
+			&user.Name,
+			&user.Email,
+			&user.Nick,
+			&user.CreatedAt,
+		); err != nil {
+			return models.User{}, err
+		}
+	}
+
+	return user, nil
+}
+
+func (userRepository users) UpdateUser(userId int64, user models.User) error {
+	statment, err := userRepository.db.Prepare(
+		"update tb_user set name = ?, nick = ?, email = ? where id = ?",
+	)
+	if err != nil {
+		return err
+	}
+	defer statment.Close()
+
+	if _, err = statment.Exec(user.Name, user.Nick, user.Email, userId); err != nil {
+		return err
+	}
+
+	return nil
 }

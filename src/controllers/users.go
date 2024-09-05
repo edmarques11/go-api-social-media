@@ -8,6 +8,10 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
+	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 // CreateUser create an user
@@ -24,7 +28,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = user.Prepare(); err != nil {
+	if err = user.Prepare(models.SaveUser); err != nil {
 		responses.Error(w, http.StatusUnprocessableEntity, err)
 		return
 	}
@@ -48,17 +52,89 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 // GetUsers get all users
 func GetUsers(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Buscando todos os usuários!"))
+	nameOrNick := strings.ToLower(r.URL.Query().Get("usuario"))
+	db, err := database.MakeConnection()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewUserRepository(db)
+	users, err := repository.GetUsers(nameOrNick)
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.ToJson(w, http.StatusOK, users)
 }
 
 // GetUserById get an user by id
 func GetUserById(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Buscando usuário por id!"))
+	params := mux.Vars(r)
+	userId, err := strconv.ParseInt(params["usuarioId"], 10, 64)
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+	db, err := database.MakeConnection()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewUserRepository(db)
+	user, err := repository.GetById(userId)
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.ToJson(w, http.StatusOK, user)
 }
 
 // UpdateUser update an user
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Atualiza usuário!"))
+	params := mux.Vars(r)
+	userId, err := strconv.ParseInt(params["usuarioId"], 10, 64)
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+	bodyRequest, err := io.ReadAll(r.Body)
+	if err != nil {
+		responses.Error(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	var user models.User
+	if err = json.Unmarshal(bodyRequest, &user); err != nil {
+		responses.ToJson(w, http.StatusBadRequest, err)
+	}
+
+	if err = user.Prepare(models.UpdateUser); err != nil {
+		responses.Error(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	db, err := database.MakeConnection()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewUserRepository(db)
+	if err = repository.UpdateUser(userId, user); err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.ToJson(w, http.StatusNoContent, nil)
 }
 
 // DeleteUser delete an usser

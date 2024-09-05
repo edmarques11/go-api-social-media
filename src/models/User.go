@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+const (
+	SaveUser   = "SaveUser"
+	UpdateUser = "UpdateUser"
+)
+
 // User represents an user
 type User struct {
 	ID        uint64    `json:"id,omitempty"`
@@ -17,15 +22,15 @@ type User struct {
 }
 
 // Prepare validate data and format
-func (user *User) Prepare() error {
-	if err := user.validator(); err != nil {
+func (user *User) Prepare(step string) error {
+	if err := user.validator(step); err != nil {
 		return err
 	}
 	user.formatData()
 	return nil
 }
 
-func (user *User) validator() error {
+func (user *User) validator(step string) error {
 	var msg string
 
 	switch {
@@ -35,7 +40,7 @@ func (user *User) validator() error {
 		msg = "o campo 'email' é obrigatório e não pode estar em branco"
 	case user.Nick == "":
 		msg = "o campo 'nick' é obrigatório e não pode estar em branco"
-	case user.Password == "":
+	case step == SaveUser && user.Password == "":
 		msg = "o campo 'password' é obrigatório e não pode estar em branco"
 	}
 
