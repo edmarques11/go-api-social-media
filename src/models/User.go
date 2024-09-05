@@ -1,6 +1,7 @@
 package models
 
 import (
+	"api/src/security"
 	"errors"
 	"strings"
 	"time"
@@ -28,7 +29,9 @@ func (user *User) Prepare(step string) error {
 	if err := user.validator(step); err != nil {
 		return err
 	}
-	user.formatData()
+	if err := user.formatData(step); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -57,8 +60,18 @@ func (user *User) validator(step string) error {
 	return nil
 }
 
-func (user *User) formatData() {
+func (user *User) formatData(step string) error {
 	user.Name = strings.TrimSpace(user.Name)
 	user.Email = strings.TrimSpace(user.Email)
 	user.Nick = strings.TrimSpace(user.Nick)
+
+	if step == SaveUser {
+		passwordByte, err := security.CreateHash(user.Password)
+		if err != nil {
+			return err
+		}
+		user.Password = string(passwordByte)
+	}
+
+	return nil
 }

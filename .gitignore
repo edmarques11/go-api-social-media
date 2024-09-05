@@ -3,3 +3,6 @@ api
 
 # Env files
 .env
+
+# Coverage test
+coverage.txt
