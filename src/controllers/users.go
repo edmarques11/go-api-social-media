@@ -1,11 +1,13 @@
 package controllers
 
 import (
+	"api/src/auth"
 	"api/src/database"
 	"api/src/helpers/responses"
 	"api/src/models"
 	"api/src/repositories"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -106,6 +108,17 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userTokenId, err := auth.GetUserIdToken(r)
+	if err != nil {
+		responses.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	if userId != int64(userTokenId) {
+		responses.Error(w, http.StatusForbidden, errors.New("usuário sem permisão"))
+		return
+	}
+
 	bodyRequest, err := io.ReadAll(r.Body)
 	if err != nil {
 		responses.Error(w, http.StatusUnprocessableEntity, err)
@@ -144,6 +157,17 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userId, err := strconv.ParseInt(params["usuarioId"], 10, 64)
 	if err != nil {
 		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+	userTokenId, err := auth.GetUserIdToken(r)
+	if err != nil {
+		responses.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	if userId != int64(userTokenId) {
+		responses.Error(w, http.StatusForbidden, errors.New("usuário sem permisão"))
 		return
 	}
 
