@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	UrlDatabaseConnection = ""
-	Port                  = 0
+	UrlDatabaseConnection string
+	Port                  int
+	SecretKey             []byte
 )
 
 // LoadEnviroment inicialize enviroment
@@ -33,4 +34,6 @@ func LoadEnviroment() {
 		os.Getenv("WSRS_DATABASE_PASSWORD"),
 		os.Getenv("WSRS_DATABASE_NAME"),
 	)
+
+	SecretKey = []byte(os.Getenv("WSRS_SECRET_AUTH"))
 }

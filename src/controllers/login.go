@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"api/src/auth"
 	"api/src/database"
 	"api/src/helpers/responses"
 	"api/src/models"
@@ -44,5 +45,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responses.ToJson(w, http.StatusOK, nil)
+	token, err := auth.GenerateToken(user.ID)
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.ToJson(w, http.StatusOK, map[string]string{"token": token})
 }
