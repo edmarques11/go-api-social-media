@@ -76,7 +76,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 // GetUserById get an user by id
 func GetUserById(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	userId, err := strconv.ParseInt(params["usuarioId"], 10, 64)
+	userId, err := strconv.ParseInt(params["userId"], 10, 64)
 	if err != nil {
 		responses.Error(w, http.StatusBadRequest, err)
 		return
@@ -102,7 +102,7 @@ func GetUserById(w http.ResponseWriter, r *http.Request) {
 // UpdateUser update an user
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	userId, err := strconv.ParseInt(params["usuarioId"], 10, 64)
+	userId, err := strconv.ParseInt(params["userId"], 10, 64)
 	if err != nil {
 		responses.Error(w, http.StatusBadRequest, err)
 		return
@@ -154,7 +154,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 // DeleteUser delete an usser
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	userId, err := strconv.ParseInt(params["usuarioId"], 10, 64)
+	userId, err := strconv.ParseInt(params["userId"], 10, 64)
 	if err != nil {
 		responses.Error(w, http.StatusBadRequest, err)
 		return
@@ -181,6 +181,43 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	repository := repositories.NewUserRepository(db)
 	err = repository.DeleteUser(userId)
 	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.ToJson(w, http.StatusNoContent, nil)
+}
+
+// UserFollow follow an user
+func UserFollow(w http.ResponseWriter, r *http.Request) {
+	followerId, err := auth.GetUserIdToken(r)
+	if err != nil {
+		responses.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	params := mux.Vars(r)
+	userId, err := strconv.ParseUint(params["userId"], 10, 64)
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if userId == followerId {
+		message := "Não é possível seguir você mesmo, seu arigó!"
+		responses.Error(w, http.StatusForbidden, errors.New(message))
+		return
+	}
+
+	db, err := database.MakeConnection()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewUserRepository(db)
+	if err := repository.Follow(userId, followerId); err != nil {
 		responses.Error(w, http.StatusInternalServerError, err)
 		return
 	}

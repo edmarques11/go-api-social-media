@@ -8,6 +8,7 @@ import (
 	"api/src/repositories"
 	"api/src/security"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 )
@@ -37,6 +38,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	userDatabase, err := repository.GetByEmail(user.Email)
 	if err != nil {
 		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	if userDatabase.ID == 0 {
+		message := "Ususário não existe"
+		responses.Error(w, http.StatusUnauthorized, errors.New(message))
 		return
 	}
 

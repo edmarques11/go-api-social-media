@@ -161,3 +161,21 @@ func (userRepository users) DeleteUser(userId int64) error {
 
 	return nil
 }
+
+// Follow follow an user
+func (userRepository users) Follow(userId, followerId uint64) error {
+	statement, err := userRepository.db.Prepare(
+		"INSERT IGNORE INTO tb_follower (user_id, follower_id) VALUES (?, ?)",
+	)
+
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	if _, err := statement.Exec(userId, followerId); err != nil {
+		return err
+	}
+
+	return nil
+}

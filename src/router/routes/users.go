@@ -19,21 +19,27 @@ var userRoutes = []Route{
 		RequireAuth: true,
 	},
 	{
-		Uri:         "/user/{usuarioId}",
+		Uri:         "/user/{userId}",
 		Method:      http.MethodGet,
 		Function:    controllers.GetUserById,
 		RequireAuth: true,
 	},
 	{
-		Uri:         "/user/{usuarioId}",
+		Uri:         "/user/{userId}",
 		Method:      http.MethodPut,
 		Function:    controllers.UpdateUser,
 		RequireAuth: true,
 	},
 	{
-		Uri:         "/user/{usuarioId}",
+		Uri:         "/user/{userId}",
 		Method:      http.MethodDelete,
 		Function:    controllers.DeleteUser,
+		RequireAuth: true,
+	},
+	{
+		Uri:         "/user/{userId}/follow",
+		Method:      http.MethodPost,
+		Function:    controllers.UserFollow,
 		RequireAuth: true,
 	},
 }
