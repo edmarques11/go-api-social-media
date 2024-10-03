@@ -9,3 +9,12 @@ CREATE TABLE tb_user(
   password VARCHAR(100) NOT NULL,
   created_at TIMESTAMP default current_timestamp()
 ) ENGINE=INNODB;
+
+CREATE TABLE tb_follower(
+  user_id INT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES tb_user(id) ON DELETE CASCADE,
+  follower_id INT NOT NULL,
+  FOREIGN KEY (follower_id) REFERENCES tb_user(id) ON DELETE CASCADE,
+
+  PRIMARY KEY(user_id, follower_id)
+) ENGINE=INNODB;
